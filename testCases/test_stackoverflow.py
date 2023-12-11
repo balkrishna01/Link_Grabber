@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 import pandas as pd
+from bs4 import BeautifulSoup
 
 
 class Test_stackoverflow:
@@ -33,15 +34,26 @@ class Test_stackoverflow:
         self.so.searchQuery("python automation")
         time.sleep(5)
 
-        # Retrieve the URLs of the top 10 search results flush-left js-search-results
+        # Retrieve the URLs of the top 10 search results
+        html_source = self.driver.page_source
         result_urls = []
-        # result_div = self.driver.find_element(By.CSS_SELECTOR, "flush-left js-search-results")
-        links = self.driver.find_elements(By.TAG_NAME, "a")
-        for link in links[:10]:
-            href = link.get_attribute("href")
-            if href:
-                result_urls.append(href)
-        print(result_urls)
+
+        soup = BeautifulSoup(html_source, 'html.parser')
+        outer_div = soup.find('div', class_='flush-left js-search-results')
+
+        if outer_div:
+            print("div found!")
+            # Find all anchor tags within the outer div
+            links = outer_div.find_all('a', href=True)
+
+            # Iterate through each anchor tag and extract URLs
+            for link in links[:10]:
+                url = link['href']
+                r_url = "{}{}".format(self.app_url, url)
+                result_urls.append(r_url)
+
+        else:
+            print("Results div not found!")
 
         # Close the browser
         self.driver.quit()

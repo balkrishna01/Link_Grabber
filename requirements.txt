@@ -3,3 +3,4 @@ pytest
 pytest-html
 openpyxl
 pandas
+beautifulsoup4
