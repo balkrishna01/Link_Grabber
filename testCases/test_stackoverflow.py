@@ -18,46 +18,58 @@ class Test_stackoverflow:
     logger = LogGen.loggen()
 
     def test_grab10url(self, setup):
-        self.driver = setup
-        self.driver.get(self.app_url)
-        self.driver.maximize_window()
+        try:
+            self.logger.info("Test started!!")
+            self.driver = setup
+            self.driver.get(self.app_url)
+            self.driver.maximize_window()
 
-        self.so = StackOverflow(self.driver)
-        self.so.clickLoginPage()
-        self.so.setEmail(self.email)
-        self.so.setPassword(self.password)
-        assert self.driver.title == "Log In - Stack Overflow"
-        self.so.clickLogin()
-        time.sleep(5)
-        assert self.driver.title == "Stack Overflow - Where Developers Learn, Share, & Build Careers"
+            self.so = StackOverflow(self.driver)
+            self.so.clickLoginPage()
+            self.so.setEmail(self.email)
+            self.so.setPassword(self.password)
+            assert self.driver.title == "Log In - Stack Overflow"
+            self.so.clickLogin()
+            time.sleep(5)
+            assert self.driver.title == "Stack Overflow - Where Developers Learn, Share, & Build Careers"
+            self.logger.info("Login is successful!")
 
-        self.so.searchQuery("python automation")
-        time.sleep(5)
+            self.so.searchQuery("python automation")
+            time.sleep(5)
 
-        # Retrieve the URLs of the top 10 search results
-        html_source = self.driver.page_source
-        result_urls = []
+            # Retrieve the URLs of the top 10 search results
+            self.logger.info("Started to grab url form result div")
+            html_source = self.driver.page_source
+            result_urls = []
 
-        soup = BeautifulSoup(html_source, 'html.parser')
-        outer_div = soup.find('div', class_='flush-left js-search-results')
+            soup = BeautifulSoup(html_source, 'html.parser')
+            outer_div = soup.find('div', class_='flush-left js-search-results')
 
-        if outer_div:
-            print("div found!")
-            # Find all anchor tags within the outer div
-            links = outer_div.find_all('a', href=True)
+            if outer_div:
+                self.logger.info("Results div is found!")
+                print("div found!")
+                # Find all anchor tags within the outer div
+                links = outer_div.find_all('a', href=True)
 
-            # Iterate through each anchor tag and extract URLs
-            for link in links[:10]:
-                url = link['href']
-                r_url = "{}{}".format(self.app_url, url)
-                result_urls.append(r_url)
+                # Iterate through each anchor tag and extract URLs
+                for link in links[:10]:
+                    url = link['href']
+                    r_url = "{}{}".format(self.app_url, url)
+                    result_urls.append(r_url)
 
-        else:
-            print("Results div not found!")
+            else:
+                self.logger.info("Result div is not found!")
+                print("Results div not found!")
 
-        # Close the browser
-        self.driver.quit()
+            # Close the browser
+            self.driver.quit()
 
-        # Export URLs to an Excel file
-        df = pd.DataFrame(result_urls, columns=["URLs"])
-        df.to_excel(".\\Reports\\"+"stack_overflow_results.xlsx", index=False)
+            # Export URLs to an Excel file
+            self.logger.info("Started to export the url to Excel file.")
+            df = pd.DataFrame(result_urls, columns=["URLs"])
+            df.to_excel(".\\Reports\\"+"stack_overflow_results.xlsx", index=False)
+            self.logger.info("Completd to export the url to Excel file.")
+        except Exception as e:
+            self.logger.info("Exception has occurred!")
+            raise Exception(e)
+        self.logger.info("Test is completed!")
