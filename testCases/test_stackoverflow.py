@@ -8,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import pandas as pd
 from bs4 import BeautifulSoup
+import re
 
 
 class Test_stackoverflow:
@@ -51,11 +52,17 @@ class Test_stackoverflow:
                 # Find all anchor tags within the outer div
                 links = outer_div.find_all('a', href=True)
 
+                # Regular expression pattern
+                pattern = re.compile(r"\?r=SearchResults$")
+
                 # Iterate through each anchor tag and extract URLs
-                for link in links[:10]:
+                for link in links:
                     url = link['href']
-                    r_url = "{}{}".format(self.app_url, url)
-                    result_urls.append(r_url)
+                    if pattern.search(url):
+                        r_url = "{}{}".format(self.app_url, url)
+                        result_urls.append(r_url)
+                        if len(result_urls) == 10:
+                            break
 
             else:
                 self.logger.info("Result div is not found!")
@@ -67,7 +74,7 @@ class Test_stackoverflow:
             # Export URLs to an Excel file
             self.logger.info("Started to export the url to Excel file.")
             df = pd.DataFrame(result_urls, columns=["URLs"])
-            df.to_excel(".\\Reports\\"+"stack_overflow_results.xlsx", index=False)
+            df.to_excel(".\\Reports\\" + "stack_overflow_results.xlsx", index=False)
             self.logger.info("Completd to export the url to Excel file.")
         except Exception as e:
             self.logger.info("Exception has occurred!")
